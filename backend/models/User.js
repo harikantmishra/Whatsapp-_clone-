@@ -19,6 +19,8 @@ const userSchema = new mongoose.Schema(
 
     email: {
       type: String,
+      unique: true,
+      sparse: true,
       lowercase: true,
       validate: {
         validator: function (value) {
@@ -42,6 +44,7 @@ const userSchema = new mongoose.Schema(
 
     about: {
       type: String,
+      default:"Hey i am using whatsapp",
     },
 
     lastSeen: {

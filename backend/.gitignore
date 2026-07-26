@@ -12,6 +12,7 @@ npm-debug.log*
 # Build folders
 dist/
 build/
+uploads/
 
 # VS Code settings
 .vscode/

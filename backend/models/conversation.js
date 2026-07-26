@@ -1,10 +1,12 @@
 const mongoose = require("mongoose");
+const User  = require('./User');
+const Message  = require('./Message');
 
 const conversationSchema = new mongoose.Schema(
   {
     participants: [{ type: mongoose.Schema.Types.ObjectId, ref: User }],
-    lastMessage: [{ type: mongoose.Schema.Types.ObjectId, ref: Message }],
-    unreadCount: { type: Number, defeault: 0 },
+    lastMessage: { type: mongoose.Schema.Types.ObjectId, ref: Message },
+    unreadCount: { type: Number, default: 0 },
   },
   {
     timestamps: true,
@@ -13,4 +15,4 @@ const conversationSchema = new mongoose.Schema(
 
 const conversation = mongoose.model('conversation',conversationSchema);
 
-module.exports= conversationSchema;
+module.exports = conversation;
