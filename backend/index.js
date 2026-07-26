@@ -23,9 +23,9 @@ connectDb();
 
 const app = express();
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT 
 const allowedOrigins = parseAllowedOrigins(process.env.FRONTEND_URL);
-const fallbackOrigin = "https://earnest-pothos-697fec.netlify.app";
+const fallbackOrigin ="";
 
 // Middlewares
 app.use(cors({
