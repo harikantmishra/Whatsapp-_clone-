@@ -19,7 +19,7 @@ import useVideoCallStore from "../../src/store/videoCallStore";
 import { getSocket } from "../../src/services/chat.service";
 import whatsappImage from "../../src/utils/images/whatsapp_image.png";
 import MessageBubble from "../../src/chatSection/messageBubble.jsx";
-import useOutsideClick from "../../src/Hooks/useOutsideclick";
+import useOutsideClick from "../../src/hooks/useOutsideClick";
 import VideoCallManager from "../VideoCall/VideoCallManager";
 
 const ChatWindow = ({ selectedContact, setSelectedContact, isMobile }) => {
