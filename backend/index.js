@@ -23,9 +23,9 @@ connectDb();
 
 const app = express();
 
-const PORT = process.env.PORT 
+const PORT = process.env.PORT || 5000;
 const allowedOrigins = parseAllowedOrigins(process.env.FRONTEND_URL);
-const fallbackOrigin ="";
+const fallbackOrigin = "http://localhost:5173";
 
 // Middlewares
 app.use(cors({
