@@ -25,7 +25,7 @@ const app = express();
 
 const PORT = process.env.PORT || 5000;
 const allowedOrigins = parseAllowedOrigins(process.env.FRONTEND_URL);
-const fallbackOrigin = "http://localhost:5173";
+const fallbackOrigin = "https://earnest-pothos-697fec.netlify.app";
 
 // Middlewares
 app.use(cors({
