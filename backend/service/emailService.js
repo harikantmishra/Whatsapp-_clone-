@@ -3,26 +3,33 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
+const createTransporter = () => {
+  const emailUser = process.env.EMAIL_USER;
+  const emailPass = process.env.EMAIL_PASS;
+
+  if (!emailUser || !emailPass) {
+    const configError = new Error(
+      "Email service is not configured. Set EMAIL_USER and EMAIL_PASS."
+    );
+    configError.code = "EMAIL_CONFIG_MISSING";
+    throw configError;
+  }
+
+  return nodemailer.createTransport({
     service: "gmail",
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+      user: emailUser,
+      pass: emailPass,
     },
-});
-
-transporter.verify((error, success) => {
-    if (error) {
-        console.error("Gmail services connection failed:", error.message);
-    } else {
-        console.log("Gmail configured properly and ready to send email");
-    }
-});
+  });
+};
 
 const sendOtpToEmail = async (email, otp) => {
-    const html = `
+  const transporter = createTransporter();
+
+  const html = `
     <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
-        <h2 style="color: #075e54;">🔐 WhatsApp Web Verification</h2>
+        <h2 style="color: #075e54;">WhatsApp Web Verification</h2>
 
         <p>Hi there,</p>
 
@@ -56,12 +63,34 @@ const sendOtpToEmail = async (email, otp) => {
     </div>
     `;
 
+  try {
     await transporter.sendMail({
-        from: `WhatsApp Web <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: "Your WhatsApp Verification Code",
-        html,
+      from: `WhatsApp Web <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Your WhatsApp Verification Code",
+      html,
     });
+  } catch (error) {
+    console.error("Failed to send OTP email:", error);
+
+    if (error.code === "EAUTH") {
+      const authError = new Error(
+        "Gmail authentication failed. Use a Gmail app password in EMAIL_PASS."
+      );
+      authError.code = "EMAIL_AUTH_FAILED";
+      throw authError;
+    }
+
+    if (error.code === "ESOCKET" || error.code === "ETIMEDOUT") {
+      const networkError = new Error(
+        "Email service could not reach Gmail. Check your deployment network settings."
+      );
+      networkError.code = "EMAIL_NETWORK_ERROR";
+      throw networkError;
+    }
+
+    throw error;
+  }
 };
 
 module.exports = sendOtpToEmail;

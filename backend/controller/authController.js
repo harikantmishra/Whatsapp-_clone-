@@ -81,6 +81,14 @@ const sendOtp = async (req, res) => {
   } catch (error) {
     console.error(error);
 
+    if (
+      error?.code === "EMAIL_CONFIG_MISSING" ||
+      error?.code === "EMAIL_AUTH_FAILED" ||
+      error?.code === "EMAIL_NETWORK_ERROR"
+    ) {
+      return response(res, 500, error.message);
+    }
+
     return response(res, 500, "Internal Server Error");
   }
 };
