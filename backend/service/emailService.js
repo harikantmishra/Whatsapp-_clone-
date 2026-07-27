@@ -8,19 +8,20 @@ const createTransporter = () => {
   const emailPass = process.env.EMAIL_PASS;
 
   if (!emailUser || !emailPass) {
-    const configError = new Error(
-      "Email service is not configured. Set EMAIL_USER and EMAIL_PASS."
-    );
-    configError.code = "EMAIL_CONFIG_MISSING";
-    throw configError;
+    throw new Error("EMAIL_USER or EMAIL_PASS is missing");
   }
 
   return nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
       user: emailUser,
       pass: emailPass,
     },
+    connectionTimeout: 60000,
+    greetingTimeout: 60000,
+    socketTimeout: 60000,
   });
 };
 
