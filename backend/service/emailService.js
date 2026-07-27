@@ -71,26 +71,16 @@ const sendOtpToEmail = async (email, otp) => {
       html,
     });
   } catch (error) {
-    console.error("Failed to send OTP email:", error);
+  console.error("========== SMTP ERROR ==========");
+  console.error(error);
+  console.error("Code:", error.code);
+  console.error("Command:", error.command);
+  console.error("Response:", error.response);
+  console.error("Response Code:", error.responseCode);
+  console.error("===============================");
 
-    if (error.code === "EAUTH") {
-      const authError = new Error(
-        "Gmail authentication failed. Use a Gmail app password in EMAIL_PASS."
-      );
-      authError.code = "EMAIL_AUTH_FAILED";
-      throw authError;
-    }
-
-    if (error.code === "ESOCKET" || error.code === "ETIMEDOUT") {
-      const networkError = new Error(
-        "Email service could not reach Gmail. Check your deployment network settings."
-      );
-      networkError.code = "EMAIL_NETWORK_ERROR";
-      throw networkError;
-    }
-
-    throw error;
-  }
+  throw error;
+}
 };
 
 module.exports = sendOtpToEmail;
