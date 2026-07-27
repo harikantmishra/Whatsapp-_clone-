@@ -16,6 +16,11 @@ const createTransporter = () => {
 };
 
 const sendOtpToEmail = async (email, otp) => {
+  console.log("BREVO_HOST:", process.env.BREVO_HOST);
+console.log("BREVO_PORT:", process.env.BREVO_PORT);
+console.log("BREVO_USER:", process.env.BREVO_USER);
+console.log("BREVO_PASS:", process.env.BREVO_PASS ? "Loaded" : "Missing");
+console.log("EMAIL_FROM:", process.env.EMAIL_FROM);
   const transporter = createTransporter();
 
   const html = `
@@ -55,6 +60,8 @@ const sendOtpToEmail = async (email, otp) => {
   `;
 
   try {
+      await transporter.verify();
+  console.log("SMTP connected");
     await transporter.sendMail({
       from: `WhatsApp Web <${process.env.EMAIL_FROM}>`,
       to: email,
