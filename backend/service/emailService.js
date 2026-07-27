@@ -1,11 +1,23 @@
-const { Resend } = require("resend");
+const nodemailer = require("nodemailer");
 const dotenv = require("dotenv");
 
 dotenv.config();
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const createTransporter = () => {
+  return nodemailer.createTransport({
+    host: process.env.BREVO_HOST,
+    port: Number(process.env.BREVO_PORT),
+    secure: false, // Port 587 uses STARTTLS
+    auth: {
+      user: process.env.BREVO_USER,
+      pass: process.env.BREVO_PASS,
+    },
+  });
+};
 
 const sendOtpToEmail = async (email, otp) => {
+  const transporter = createTransporter();
+
   const html = `
     <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
       <h2 style="color: #075e54;">WhatsApp Web Verification</h2>
@@ -43,22 +55,23 @@ const sendOtpToEmail = async (email, otp) => {
   `;
 
   try {
-    const { error } = await resend.emails.send({
-      from: "WhatsApp Web <onboarding@resend.dev>",
+    await transporter.sendMail({
+      from: `WhatsApp Web <${process.env.EMAIL_FROM}>`,
       to: email,
       subject: "Your WhatsApp Verification Code",
       html,
     });
 
-    if (error) {
-      console.error(error);
-      throw new Error(error.message);
-    }
+    console.log("✅ OTP email sent successfully");
+  } catch (error) {
+    console.error("========== BREVO SMTP ERROR ==========");
+    console.error(error);
+    console.error("Code:", error.code);
+    console.error("Command:", error.command);
+    console.error("Response:", error.response);
+    console.error("===============================");
 
-    console.log("OTP email sent successfully");
-  } catch (err) {
-    console.error("Resend Error:", err);
-    throw err;
+    throw error;
   }
 };
 
