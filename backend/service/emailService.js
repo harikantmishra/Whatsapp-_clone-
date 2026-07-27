@@ -1,49 +1,42 @@
-const axios = require("axios");
-const dotenv = require("dotenv");
+const nodemailer = require("nodemailer");
+require("dotenv").config();
 
-dotenv.config();
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
 const sendOtpToEmail = async (email, otp) => {
-  const html = `
-    <h2>WhatsApp Verification</h2>
-    <p>Your OTP is:</p>
-    <h1>${otp}</h1>
-    <p>This OTP is valid for 5 minutes.</p>
-  `;
-
   try {
-    console.log("========== BREVO DEBUG ==========");
-    console.log("BREVO_API_KEY:", process.env.BREVO_API_KEY?.slice(0, 15));
-    console.log("EMAIL_FROM:", process.env.EMAIL_FROM);
-    console.log("TO:", email);
-    console.log("================================");
+    // Verify SMTP connection
+    await transporter.verify();
+    console.log("✅ Gmail SMTP Connected");
 
-    const response = await axios.post(
-      "https://api.brevo.com/v3/smtp/email",
-      {
-        sender: {
-          name: "WhatsApp Web",
-          email: process.env.EMAIL_FROM,
-        },
-        to: [{ email }],
-        subject: "Your WhatsApp Verification Code",
-        htmlContent: html,
-      },
-      {
-        headers: {
-          "api-key": process.env.BREVO_API_KEY,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const info = await transporter.sendMail({
+      from: `"WhatsApp Web" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Your WhatsApp Verification Code",
+      html: `
+        <div style="font-family:Arial,sans-serif">
+          <h2>WhatsApp Verification</h2>
+          <p>Your OTP is:</p>
+          <h1 style="color:#25D366">${otp}</h1>
+          <p>This OTP is valid for <b>5 minutes</b>.</p>
+        </div>
+      `,
+    });
 
-    console.log("Status:", response.status);
-    console.log("Response:", response.data);
-  } catch (err) {
-    console.error("========== BREVO ERROR ==========");
-    console.error(err.response?.data || err.message);
-    console.error("================================");
-    throw err;
+    console.log("✅ Email Sent");
+    console.log("Message ID:", info.messageId);
+
+    return true;
+  } catch (error) {
+    console.error("❌ Email Error:");
+    console.error(error);
+    throw error;
   }
 };
 
