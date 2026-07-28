@@ -2,26 +2,30 @@ const nodemailer = require("nodemailer");
 const dotenv = require("dotenv");
 
 dotenv.config();
-console.log("EMAIL_USER =", process.env.EMAIL_USER);
-console.log("EMAIL_PASS exists =", !!process.env.EMAIL_PASS);
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true, // STARTTLS
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  family: 4, // Force IPv4
-});
-transporter.verify((error, success) => {
-    if (error) {
-        console.error("Gmail services connection failed");
-    } else {
-        console.log("Gmail configured properly and ready to send email");
+let transporter;
+
+const getTransporter = () => {
+    if (transporter) {
+        return transporter;
     }
-});
+
+    transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+        },
+        family: 4,
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 10000,
+    });
+
+    return transporter;
+};
 
 const sendOtpToEmail = async (email, otp) => {
     const html = `
@@ -53,7 +57,7 @@ const sendOtpToEmail = async (email, otp) => {
     </div>
     `;
 
-    await transporter.sendMail({
+    await getTransporter().sendMail({
         from: `WhatsApp Web <${process.env.EMAIL_USER}>`,
         to: email,
         subject: "Your WhatsApp Verification Code",
