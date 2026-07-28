@@ -55,7 +55,7 @@ const ChatList = ({ contacts = [] }) => {
       }`}
     >
       <div
-        className={`flex justify-between p-4 ${
+        className={`flex items-center justify-between px-4 pt-4 pb-3 ${
           theme === "dark" ? "text-white" : "text-gray-800"
         }`}
       >
@@ -65,7 +65,7 @@ const ChatList = ({ contacts = [] }) => {
         </button>
       </div>
 
-      <div className="p-2">
+      <div className="px-3 pb-3">
         <div className="relative">
           <FaSearch
             className={`absolute top-1/2 left-3 -translate-y-1/2 ${
@@ -91,7 +91,7 @@ const ChatList = ({ contacts = [] }) => {
           <motion.div
             key={contact._id}
             onClick={() => setSelectedContact(contact)}
-            className={`flex cursor-pointer items-center p-3 ${
+            className={`flex cursor-pointer items-center gap-3 px-4 py-3 ${
               theme === "dark"
                 ? selectedContact?._id === contact?._id
                   ? "bg-gray-700"
@@ -107,14 +107,14 @@ const ChatList = ({ contacts = [] }) => {
               className="h-12 w-12 rounded-full object-cover"
             />
 
-            <div className="ml-3 flex-1">
+            <div className="min-w-0 flex-1">
               <div className="flex items-baseline justify-between">
-                <h2 className={`font-semibold ${theme === "dark" ? "text-white" : "text-black"}`}>
+                <h2 className={`truncate font-semibold ${theme === "dark" ? "text-white" : "text-black"}`}>
                   {contact?.username}
                 </h2>
 
                 {contact?.conversation?.lastMessage?.createdAt && (
-                  <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                  <span className={`ml-3 shrink-0 text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
                     {formatTimestamp(contact.conversation.lastMessage.createdAt)}
                   </span>
                 )}
@@ -139,6 +139,16 @@ const ChatList = ({ contacts = [] }) => {
             </div>
           </motion.div>
         ))}
+        {contactsWithConversation.length === 0 && (
+          <div
+            className={`flex h-full flex-col items-center justify-center px-6 text-center text-sm ${
+              theme === "dark" ? "text-gray-400" : "text-gray-500"
+            }`}
+          >
+            <p className="font-medium">No chats found</p>
+            <p className="mt-1">Try a different search or wait for contacts to load.</p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -407,26 +407,26 @@ function Login() {
   }, [user, resetLoginState, setStep]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-400 via-cyan-400 to-blue-500 px-4 py-6">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-400 via-cyan-400 to-blue-500 px-3 py-4 sm:px-4 sm:py-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl"
+        className="w-full max-w-md rounded-[28px] bg-white p-5 shadow-2xl sm:p-8"
       >
         {/* Logo */}
-        <div className="mb-6 flex justify-center">
-          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-green-500 shadow-lg">
-            <FaWhatsapp className="text-5xl text-white" />
+        <div className="mb-5 flex justify-center sm:mb-6">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-500 shadow-lg sm:h-24 sm:w-24">
+            <FaWhatsapp className="text-4xl text-white sm:text-5xl" />
           </div>
         </div>
 
         {/* Heading */}
-        <h1 className="text-center text-3xl font-bold text-gray-800">
+        <h1 className="text-center text-2xl font-bold text-gray-800 sm:text-3xl">
           WhatsApp
         </h1>
 
-        <p className="mt-2 mb-6 text-center text-gray-500">Secure Login</p>
+        <p className="mt-2 mb-5 text-center text-sm text-gray-500 sm:mb-6 sm:text-base">Secure Login</p>
 
         {/* Progress Bar */}
         <div className="mb-8 h-2 w-full rounded-full bg-gray-200">
@@ -453,13 +453,13 @@ function Login() {
             </p>
 
             {/* Phone Input */}
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3">
               {/* Country Code */}
-              <div className="relative w-32">
+              <div className="relative w-28 sm:w-32">
                 <button
                   type="button"
                   onClick={() => setShowDropdown(!showDropdown)}
-                  className="flex w-full items-center justify-between rounded-xl border px-3 py-3"
+                  className="flex w-full items-center justify-between rounded-xl border px-2.5 py-3 text-sm sm:px-3"
                 >
                   <span className="flex items-center gap-2">
                     <span>{getFlagEmoji(selectedCountry.alpha2)}</span>
@@ -470,7 +470,7 @@ function Login() {
                 </button>
 
                 {showDropdown && (
-                  <div className="absolute z-50 mt-2 max-h-64 w-72 overflow-auto rounded-xl border bg-white shadow-xl">
+                  <div className="absolute z-50 mt-2 max-h-64 w-72 max-w-[calc(100vw-1.5rem)] overflow-auto rounded-xl border bg-white shadow-xl">
                     <input
                       type="text"
                       placeholder="Search Country..."
@@ -504,7 +504,7 @@ function Login() {
                   type="text"
                   placeholder="Phone Number"
                   {...register("phoneNumber")}
-                  className="w-full rounded-xl border px-4 py-3 outline-none focus:border-green-500"
+                  className="w-full rounded-xl border px-3 py-3 text-sm outline-none focus:border-green-500 sm:px-4 sm:text-base"
                 />
 
                 {errors.phoneNumber && (
@@ -530,7 +530,7 @@ function Login() {
                 type="email"
                 placeholder="Email Address"
                 {...register("email")}
-                className="w-full rounded-xl border py-3 pr-4 pl-12 outline-none focus:border-green-500"
+                className="w-full rounded-xl border py-3 pr-4 pl-11 text-sm outline-none focus:border-green-500 sm:pl-12 sm:text-base"
               />
 
               {errors.email && (
@@ -571,7 +571,7 @@ function Login() {
 
             {/* OTP BOXES */}
 
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-2 place-items-center">
               {otp.slice(0, otpLength).map((digit, index) => (
                 <input
                   key={index}
@@ -583,7 +583,7 @@ function Login() {
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleOtpKeyDown(index, e)}
                   onPaste={handleOtpPaste}
-                  className="h-14 w-14 rounded-xl border-2 border-gray-300 text-center text-2xl font-bold outline-none transition focus:border-green-500"
+                  className="h-12 w-12 rounded-xl border-2 border-gray-300 text-center text-xl font-bold outline-none transition focus:border-green-500 sm:h-14 sm:w-14 sm:text-2xl"
                 />
               ))}
             </div>

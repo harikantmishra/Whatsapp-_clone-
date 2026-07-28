@@ -304,10 +304,10 @@ const ChatWindow = ({ selectedContact, setSelectedContact, isMobile }) => {
         theme === "dark" ? "bg-[#0b141a] text-white" : "bg-[#efeae2] text-[#111b21]"
       }`}
     >
-      <div className={`flex items-center justify-between gap-3 border-b px-4 py-3 ${theme === "dark" ? "border-gray-700 bg-[#202c33]" : "border-[#d1d7db] bg-[#f0f2f5]"}`}>
+      <div className={`flex items-center justify-between gap-3 border-b px-3 py-3 sm:px-4 ${theme === "dark" ? "border-gray-700 bg-[#202c33]" : "border-[#d1d7db] bg-[#f0f2f5]"}`}>
         <div className="flex min-w-0 items-center gap-3">
         {isMobile && (
-          <button type="button" onClick={() => setSelectedContact(null)} className="text-lg">
+          <button type="button" onClick={() => setSelectedContact(null)} className="rounded-full p-2 text-lg">
             <FaArrowLeft />
           </button>
         )}
@@ -316,9 +316,9 @@ const ChatWindow = ({ selectedContact, setSelectedContact, isMobile }) => {
           alt={selectedContact.username}
           className="h-10 w-10 rounded-full object-cover"
         />
-        <div>
-          <div className="font-semibold">{selectedContact.username || "User"}</div>
-          <div className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+        <div className="min-w-0">
+          <div className="truncate font-semibold">{selectedContact.username || "User"}</div>
+          <div className={`truncate text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
             {typingVisible
               ? "Typing..."
               : onlineVisible
@@ -344,7 +344,7 @@ const ChatWindow = ({ selectedContact, setSelectedContact, isMobile }) => {
         </button>
       </div>
 
-      <div className={`min-h-0 flex-1 overflow-y-auto p-4 ${theme === "dark" ? "bg-[#0b141a]" : "bg-[#efeae2]"}`}>
+      <div className={`min-h-0 flex-1 overflow-y-auto px-3 py-4 sm:px-4 ${theme === "dark" ? "bg-[#0b141a]" : "bg-[#efeae2]"}`}>
         {loading && messages.length === 0 ? (
           <div className={`text-center text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
             Loading messages...
@@ -370,7 +370,7 @@ const ChatWindow = ({ selectedContact, setSelectedContact, isMobile }) => {
 
       {selectedFile && (
         <div
-          className={`mx-4 mb-3 overflow-hidden rounded-3xl border shadow-lg ${
+          className={`mx-3 mb-3 overflow-hidden rounded-3xl border shadow-lg sm:mx-4 ${
             theme === "dark"
               ? "border-white/10 bg-[#16232b]"
               : "border-gray-200 bg-white"
@@ -446,7 +446,7 @@ const ChatWindow = ({ selectedContact, setSelectedContact, isMobile }) => {
         </div>
       )}
 
-      <div className={`relative flex items-center gap-3 border-t px-4 py-3 ${theme === "dark" ? "border-gray-700 bg-[#202c33]" : "border-[#d1d7db] bg-[#f0f2f5]"}`}>
+      <div className={`relative flex items-end gap-2 border-t px-3 py-3 sm:gap-3 sm:px-4 ${theme === "dark" ? "border-gray-700 bg-[#202c33]" : "border-[#d1d7db] bg-[#f0f2f5]"}`}>
         <input
           ref={fileInputRef}
           type="file"
@@ -501,7 +501,7 @@ const ChatWindow = ({ selectedContact, setSelectedContact, isMobile }) => {
 
           {showAttachmentMenu && (
             <div
-              className={`absolute bottom-16 left-0 w-72 overflow-hidden rounded-3xl border shadow-2xl ${
+              className={`absolute bottom-16 left-0 z-40 w-[min(18rem,calc(100vw-1.5rem))] overflow-hidden rounded-3xl border shadow-2xl ${
                 theme === "dark"
                   ? "border-gray-700 bg-[#16232b]"
                   : "border-gray-200 bg-white"
@@ -554,7 +554,7 @@ const ChatWindow = ({ selectedContact, setSelectedContact, isMobile }) => {
               handleSendMessage();
             }
           }}
-          className={`flex-1 rounded-full px-4 py-3 outline-none ${
+          className={`min-w-0 flex-1 rounded-full px-4 py-3 outline-none ${
             theme === "dark" ? "bg-[#2a3942] text-white" : "border border-[#d1d7db] bg-white text-[#111b21]"
           }`}
         />

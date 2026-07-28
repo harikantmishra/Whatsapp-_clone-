@@ -14,13 +14,21 @@ const Layout = ({ children }) => {
   const isChatsRoute = location.pathname === "/";
   const shouldRenderChatWindow =
     isChatsRoute || location.pathname === "/user-profile" || location.pathname === "/setting" || location.pathname === "/status";
-  const shouldUseSidebarColumn = true;
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    if (!isChatsRoute) {
+      setSelectedContact(null);
+    }
+  }, [isChatsRoute, setSelectedContact]);
+
+  const showChatWindow = shouldRenderChatWindow && (selectedContact || !isMobile);
+  const showPrimaryPane = !selectedContact || !isMobile || !shouldRenderChatWindow;
 
   return (
     <div
@@ -29,22 +37,18 @@ const Layout = ({ children }) => {
       }`}
     >
       {!isMobile && <Sidebar />}
-      <div className={`flex h-full flex-1 overflow-hidden ${isMobile ? "flex-col" : ""}`}>
-        {(!selectedContact || !isMobile || !shouldRenderChatWindow) && (
+      <div className="flex h-full min-w-0 flex-1 overflow-hidden">
+        {showPrimaryPane && (
           <div
             className={`h-full min-h-0 ${
-              shouldUseSidebarColumn
-                ? isMobile
-                  ? "w-full pb-16"
-                  : "w-full shrink-0 md:w-[380px] md:max-w-[40%]"
-                : "w-full"
+              isMobile ? "w-full pb-16" : "w-full shrink-0 md:w-[380px] md:max-w-[40%]"
             }`}
           >
             {children}
           </div>
         )}
-        {shouldRenderChatWindow && (selectedContact || !isMobile) && (
-          <div className="h-full min-h-0 min-w-0 flex-1">
+        {showChatWindow && (
+          <div className={`h-full min-h-0 min-w-0 flex-1 ${isMobile ? "pb-16" : ""}`}>
             <ChatWindow
               selectedContact={selectedContact}
               setSelectedContact={setSelectedContact}
