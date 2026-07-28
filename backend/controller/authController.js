@@ -6,6 +6,11 @@ const twilioService = require("../service/twilio.Service.js");
 const generateToken = require("../utils/generateJWT.js");
 const { uploadFileToCloudinary } = require("../config/cloudinary.js");
 const Conversation = require("../models/conversation.js");
+const {
+  isSupabaseEmailVerificationEnabled,
+  sendSupabaseEmailOtp,
+  verifySupabaseEmailOtp,
+} = require("../service/supabaseEmailVerificationService.js");
 
 const isProduction = process.env.NODE_ENV === "production";
 const authCookieOptions = {
@@ -13,6 +18,24 @@ const authCookieOptions = {
   secure: isProduction,
   sameSite: isProduction ? "none" : "lax",
   maxAge: 1000 * 60 * 60 * 24 * 365,
+};
+
+const finalizeAuthenticatedUser = async (user, res, message = "Otp verified successfully") => {
+  user.isVerified = true;
+  user.pendingEmailVerification = false;
+  user.emailOtp = null;
+  user.emailOtpExpiry = null;
+  user.emailOtpVerifiedAt = null;
+
+  await user.save();
+
+  const token = generateToken(user._id);
+  res.cookie("auth_token", token, authCookieOptions);
+
+  return response(res, 200, message, {
+    token,
+    user,
+  });
 };
 
 // Send OTP
@@ -46,11 +69,19 @@ const sendOtp = async (req, res) => {
 
       user.emailOtp = otp;
       user.emailOtpExpiry = expiry;
+      user.emailOtpVerifiedAt = null;
+      user.pendingEmailVerification = false;
 
-      await sendOtpToEmail(normalizedEmail, otp);
+      if (isSupabaseEmailVerificationEnabled()) {
+        await sendSupabaseEmailOtp(normalizedEmail);
+      } else {
+        await sendOtpToEmail(normalizedEmail, otp);
+      }
+
       await user.save();
       return response(res, 200, "OTP sent successfully", {
         email: normalizedEmail,
+        provider: isSupabaseEmailVerificationEnabled() ? "supabase" : "legacy",
       });
     }
 
@@ -137,11 +168,22 @@ const verifyOtp = async (req, res) => {
         return response(res, 400, "Invalid or expired otp");
       }
 
-      user.isVerified = true;
-      user.emailOtp = null;
-      user.emailOtpExpiry = null;
+      if (isSupabaseEmailVerificationEnabled()) {
+        const supabaseVerification = await verifySupabaseEmailOtp(
+          normalizedEmail,
+          String(otp)
+        );
 
-      await user.save();
+        user.emailOtpVerifiedAt = new Date();
+        user.pendingEmailVerification = false;
+        user.supabaseUserId = supabaseVerification?.user?.id || user.supabaseUserId;
+        user.supabaseEmailConfirmedAt = new Date();
+        user.emailOtp = null;
+        user.emailOtpExpiry = null;
+        await user.save();
+      } else {
+        user.emailOtpVerifiedAt = new Date();
+      }
     }
 
     // Phone OTP Verification
@@ -170,15 +212,7 @@ const verifyOtp = async (req, res) => {
       await user.save();
     }
 
-    // Generate JWT
-    const token = generateToken(user._id);
-
-    res.cookie("auth_token", token, authCookieOptions);
-
-    return response(res, 200, "Otp verified successfully", {
-      token,
-      user,
-    });
+    return finalizeAuthenticatedUser(user, res);
   } catch (error) {
     console.error(error);
     return response(res, 500, "Internal Server Error");

@@ -38,6 +38,23 @@ const userSchema = new mongoose.Schema(
       type: Date,
     },
 
+    emailOtpVerifiedAt: {
+      type: Date,
+    },
+
+    pendingEmailVerification: {
+      type: Boolean,
+      default: false,
+    },
+
+    supabaseUserId: {
+      type: String,
+    },
+
+    supabaseEmailConfirmedAt: {
+      type: Date,
+    },
+
     profilePicture: {
       type: String,
     },

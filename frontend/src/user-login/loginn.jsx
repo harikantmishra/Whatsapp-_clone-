@@ -74,8 +74,13 @@ function Login() {
 
   const { theme } = useThemeStore();
 
-  const { step, setStep, userPhoneData, setUserPhoneData, resetLoginState } =
-    useLoginStore();
+  const {
+    step,
+    setStep,
+    userPhoneData,
+    setUserPhoneData,
+    resetLoginState,
+  } = useLoginStore();
   const [loading, setLoading] = useState(false);
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
