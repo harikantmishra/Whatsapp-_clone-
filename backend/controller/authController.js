@@ -1,7 +1,6 @@
 const otpGenerate = require("../utils/otpGenerator.js");
 const User = require("../models/User.js");
 const response = require("../utils/responseHandler.js");
-const sendOtpToEmail = require("../service/emailService.js");
 const twilioService = require("../service/twilio.Service.js");
 const generateToken = require("../utils/generateJWT.js");
 const { uploadFileToCloudinary } = require("../config/cloudinary.js");
@@ -60,6 +59,14 @@ const sendOtp = async (req, res) => {
   try {
     // Email OTP
     if (email) {
+      if (!isSupabaseEmailVerificationEnabled()) {
+        return response(
+          res,
+          500,
+          "Supabase email OTP is not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY."
+        );
+      }
+
       const normalizedEmail = email.trim().toLowerCase();
       user = await User.findOne({ email: normalizedEmail });
 
@@ -72,16 +79,12 @@ const sendOtp = async (req, res) => {
       user.emailOtpVerifiedAt = null;
       user.pendingEmailVerification = false;
 
-      if (isSupabaseEmailVerificationEnabled()) {
-        await sendSupabaseEmailOtp(normalizedEmail);
-      } else {
-        await sendOtpToEmail(normalizedEmail, otp);
-      }
+      await sendSupabaseEmailOtp(normalizedEmail);
 
       await user.save();
       return response(res, 200, "OTP sent successfully", {
         email: normalizedEmail,
-        provider: isSupabaseEmailVerificationEnabled() ? "supabase" : "legacy",
+        provider: "supabase",
       });
     }
 
@@ -150,6 +153,14 @@ const verifyOtp = async (req, res) => {
 
     // Email OTP Verification
     if (email) {
+      if (!isSupabaseEmailVerificationEnabled()) {
+        return response(
+          res,
+          500,
+          "Supabase email OTP is not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY."
+        );
+      }
+
       const normalizedEmail = email.trim().toLowerCase();
       user = await User.findOne({ email: normalizedEmail });
 
@@ -168,22 +179,18 @@ const verifyOtp = async (req, res) => {
         return response(res, 400, "Invalid or expired otp");
       }
 
-      if (isSupabaseEmailVerificationEnabled()) {
-        const supabaseVerification = await verifySupabaseEmailOtp(
-          normalizedEmail,
-          String(otp)
-        );
+      const supabaseVerification = await verifySupabaseEmailOtp(
+        normalizedEmail,
+        String(otp)
+      );
 
-        user.emailOtpVerifiedAt = new Date();
-        user.pendingEmailVerification = false;
-        user.supabaseUserId = supabaseVerification?.user?.id || user.supabaseUserId;
-        user.supabaseEmailConfirmedAt = new Date();
-        user.emailOtp = null;
-        user.emailOtpExpiry = null;
-        await user.save();
-      } else {
-        user.emailOtpVerifiedAt = new Date();
-      }
+      user.emailOtpVerifiedAt = new Date();
+      user.pendingEmailVerification = false;
+      user.supabaseUserId = supabaseVerification?.user?.id || user.supabaseUserId;
+      user.supabaseEmailConfirmedAt = new Date();
+      user.emailOtp = null;
+      user.emailOtpExpiry = null;
+      await user.save();
     }
 
     // Phone OTP Verification
