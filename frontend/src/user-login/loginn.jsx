@@ -67,6 +67,10 @@ function getFlagEmoji(alpha2) {
     .join("");
 }
 
+const createOtpState = () => Array(8).fill("");
+const EMAIL_OTP_LENGTH = 8;
+const PHONE_OTP_LENGTH = 6;
+
 function Login() {
   const navigate = useNavigate();
 
@@ -83,7 +87,7 @@ function Login() {
   } = useLoginStore();
   const [loading, setLoading] = useState(false);
 
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [otp, setOtp] = useState(createOtpState);
 
   const [error, setError] = useState("");
 
@@ -134,6 +138,8 @@ function Login() {
   }, [searchTerm]);
 
   const progressWidth = `${(step / 3) * 100}%`;
+  const isEmailOtpFlow = userPhoneData?.authMethod === "email";
+  const otpLength = isEmailOtpFlow ? EMAIL_OTP_LENGTH : PHONE_OTP_LENGTH;
 
   // =======================
   // Login Submit
@@ -154,9 +160,11 @@ function Login() {
 
         if (response.status === "success") {
           toast.success("OTP sent to your email");
+          setOtp(createOtpState());
 
           setUserPhoneData({
             email,
+            authMethod: "email",
           });
 
           setStep(2);
@@ -168,10 +176,12 @@ function Login() {
 
         if (response.status === "success") {
           toast.success("OTP sent successfully");
+          setOtp(createOtpState());
 
           setUserPhoneData({
             phoneNumber,
             phoneSuffix: selectedCountry.dialCode,
+            authMethod: "phone",
           });
 
           setStep(2);
@@ -204,13 +214,13 @@ function Login() {
 
       const otpString = otp.join("");
 
-      if (otpString.length !== 6) {
+      if (otpString.length !== otpLength) {
         throw new Error("Please enter complete OTP");
       }
 
       let response;
 
-      if (userPhoneData.email) {
+      if (isEmailOtpFlow) {
         response = await verifyOtp(null, null, otpString, userPhoneData.email);
       } else {
         response = await verifyOtp(
@@ -299,8 +309,34 @@ function Login() {
 
     setOtp(newOtp);
 
-    if (value && index < 5) {
+    if (value && index < otpLength - 1) {
       document.getElementById(`otp-${index + 1}`)?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e) => {
+    const pastedValue = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, otpLength);
+
+    if (!pastedValue) {
+      return;
+    }
+
+    e.preventDefault();
+
+    const nextOtp = createOtpState();
+
+    pastedValue.split("").forEach((digit, index) => {
+      nextOtp[index] = digit;
+    });
+
+    setOtp(nextOtp);
+
+    const focusIndex = Math.min(pastedValue.length, otpLength) - 1;
+    if (focusIndex >= 0) {
+      document.getElementById(`otp-${focusIndex}`)?.focus();
     }
   };
 
@@ -321,7 +357,7 @@ function Login() {
   const handleBack = () => {
     setStep(1);
 
-    setOtp(["", "", "", "", "", ""]);
+    setOtp(createOtpState());
 
     setUserPhoneData(null);
 
@@ -522,10 +558,12 @@ function Login() {
             <div className="text-center">
               <h2 className="text-2xl font-bold text-gray-800">Verify OTP</h2>
 
-              <p className="mt-2 text-gray-500">We've sent a 6-digit OTP to</p>
+              <p className="mt-2 text-gray-500">
+                We&apos;ve sent an {isEmailOtpFlow ? "8" : "6"}-digit OTP to
+              </p>
 
               <p className="mt-1 font-semibold text-green-600">
-                {userPhoneData?.email
+                {isEmailOtpFlow
                   ? userPhoneData.email
                   : `${userPhoneData?.phoneSuffix} ${userPhoneData?.phoneNumber}`}
               </p>
@@ -533,8 +571,8 @@ function Login() {
 
             {/* OTP BOXES */}
 
-            <div className="flex justify-between gap-2">
-              {otp.map((digit, index) => (
+            <div className="grid grid-cols-4 gap-2">
+              {otp.slice(0, otpLength).map((digit, index) => (
                 <input
                   key={index}
                   id={`otp-${index}`}
@@ -544,6 +582,7 @@ function Login() {
                   value={digit}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                  onPaste={handleOtpPaste}
                   className="h-14 w-14 rounded-xl border-2 border-gray-300 text-center text-2xl font-bold outline-none transition focus:border-green-500"
                 />
               ))}
@@ -565,7 +604,7 @@ function Login() {
               <button
                 type="button"
                 onClick={() => {
-                  if (userPhoneData?.email) {
+                  if (isEmailOtpFlow) {
                     onLoginSubmit({
                       email: userPhoneData.email,
                     });

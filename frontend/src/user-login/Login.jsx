@@ -344,7 +344,7 @@ const handleBack  =  ()=>{
         theme === "dark" ? "text-gray-300" : "text-gray-600"
       } mb-4`}
     >
-      Please enter the 6-digit OTP send to your{" "}
+      Please enter the OTP sent to your{" "}
       {userPhoneData ? userPhoneData.phoneSuffix : "Email"}{" "}
       {" "}
       {userPhoneData.phoneNumber && userPhoneData?.phoneNumber}
@@ -407,4 +407,3 @@ const handleBack  =  ()=>{
 export default Login; \
 
 */
-

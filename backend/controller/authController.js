@@ -1,4 +1,3 @@
-const otpGenerate = require("../utils/otpGenerator.js");
 const User = require("../models/User.js");
 const response = require("../utils/responseHandler.js");
 const twilioService = require("../service/twilio.Service.js");
@@ -19,21 +18,36 @@ const authCookieOptions = {
   maxAge: 1000 * 60 * 60 * 24 * 365,
 };
 
+const normalizeEmail = (email) => email.trim().toLowerCase();
+
+const clearLegacyEmailOtpFields = async (userId) => {
+  await User.updateOne(
+    { _id: userId },
+    {
+      $unset: {
+        emailOtp: 1,
+        emailOtpExpiry: 1,
+        emailOtpVerifiedAt: 1,
+      },
+    }
+  );
+};
+
 const finalizeAuthenticatedUser = async (user, res, message = "Otp verified successfully") => {
   user.isVerified = true;
   user.pendingEmailVerification = false;
-  user.emailOtp = null;
-  user.emailOtpExpiry = null;
-  user.emailOtpVerifiedAt = null;
 
   await user.save();
+  await clearLegacyEmailOtpFields(user._id);
+
+  const sanitizedUser = await User.findById(user._id);
 
   const token = generateToken(user._id);
   res.cookie("auth_token", token, authCookieOptions);
 
   return response(res, 200, message, {
     token,
-    user,
+    user: sanitizedUser,
   });
 };
 
@@ -51,9 +65,6 @@ const sendOtp = async (req, res) => {
     return response(res, 400, "Email or phone auth details are required");
   }
 
-  const otp = otpGenerate();
-  const expiry = new Date(Date.now() + 5 * 60 * 1000);
-
   let user;
 
   try {
@@ -67,21 +78,19 @@ const sendOtp = async (req, res) => {
         );
       }
 
-      const normalizedEmail = email.trim().toLowerCase();
+      const normalizedEmail = normalizeEmail(email);
       user = await User.findOne({ email: normalizedEmail });
 
       if (!user) {
         user = new User({ email: normalizedEmail });
       }
 
-      user.emailOtp = otp;
-      user.emailOtpExpiry = expiry;
-      user.emailOtpVerifiedAt = null;
       user.pendingEmailVerification = false;
 
       await sendSupabaseEmailOtp(normalizedEmail);
 
       await user.save();
+      await clearLegacyEmailOtpFields(user._id);
       return response(res, 200, "OTP sent successfully", {
         email: normalizedEmail,
         provider: "supabase",
@@ -127,8 +136,6 @@ const sendOtp = async (req, res) => {
   }
 };
 
-module.exports = { sendOtp };
-
 // step 2 : verify otp
 
 const verifyOtp = async (req, res) => {
@@ -148,6 +155,10 @@ const verifyOtp = async (req, res) => {
     return response(res, 400, "Otp is required");
   }
 
+  if (!/^\d+$/.test(String(otp))) {
+    return response(res, 400, "Otp must contain only digits");
+  }
+
   try {
     let user;
 
@@ -161,22 +172,15 @@ const verifyOtp = async (req, res) => {
         );
       }
 
-      const normalizedEmail = email.trim().toLowerCase();
+      if (String(otp).length !== 8) {
+        return response(res, 400, "Email OTP must be 8 digits");
+      }
+
+      const normalizedEmail = normalizeEmail(email);
       user = await User.findOne({ email: normalizedEmail });
 
       if (!user) {
         return response(res, 404, "User not found");
-      }
-
-      const now = new Date();
-
-      if (
-        !user.emailOtp ||
-        String(user.emailOtp) !== String(otp) ||
-        !user.emailOtpExpiry ||
-        now > new Date(user.emailOtpExpiry)
-      ) {
-        return response(res, 400, "Invalid or expired otp");
       }
 
       const supabaseVerification = await verifySupabaseEmailOtp(
@@ -187,14 +191,19 @@ const verifyOtp = async (req, res) => {
       user.emailOtpVerifiedAt = new Date();
       user.pendingEmailVerification = false;
       user.supabaseUserId = supabaseVerification?.user?.id || user.supabaseUserId;
-      user.supabaseEmailConfirmedAt = new Date();
-      user.emailOtp = null;
-      user.emailOtpExpiry = null;
+      user.supabaseEmailConfirmedAt = supabaseVerification?.user?.email_confirmed_at
+        ? new Date(supabaseVerification.user.email_confirmed_at)
+        : new Date();
       await user.save();
+      await clearLegacyEmailOtpFields(user._id);
     }
 
     // Phone OTP Verification
     else {
+      if (String(otp).length !== 6) {
+        return response(res, 400, "Phone OTP must be 6 digits");
+      }
+
       if (!phoneNumber || !phoneSuffix) {
         return response(res, 400, "Phone number and phone suffix are required");
       }
